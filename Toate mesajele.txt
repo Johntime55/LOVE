@@ -1,0 +1,108 @@
+<div class="modal fade" id="borrowModal" tabindex="-1" role="dialog" aria-labelledby="borrowModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="borrowModalLabel">Borrow Confirmation</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to borrow this book?
+                <p id="borrowSuccessMessage" style="display: none; color: green;">The book has been successfully borrowed!</p>
+                <p id="borrowAlreadyBorrowedMessage" style="display: none; color: red;">You have already borrowed this book!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                <button type="button" class="btn btn-primary" id="confirmBorrowButton">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+function borrowBook(isbn13) {
+    $('#borrowModal').modal('show');
+
+    $('#confirmBorrowButton').click(function () {
+        $.ajax({
+            type: "POST",
+            url: "/BorrowBook/Borrow",
+            data: { isbn13: isbn13 },
+            success: function (response) {
+                if (response.Success) {
+                    $('#borrowSuccessMessage').show(); // Afișați mesajul de succes
+                    $('#confirmBorrowButton').hide(); // Ascundeți butonul "Yes" după ce ați adăugat cu succes în lista de așteptare
+                    location.reload();
+                } else {
+                    $('#borrowAlreadyBorrowedMessage').show(); // Afișați mesajul de avertisment că cartea a fost deja împrumutată
+                }
+            },
+            error: function () {
+                // Tratați cazurile de eroare, dacă este necesar
+            }
+        });
+    });
+
+    $('#borrowModal').on('hidden.bs.modal', function () {
+        $('#confirmBorrowButton').off('click');
+        $('#borrowSuccessMessage').hide(); // Ascundeți mesajele la închiderea modalului
+        $('#borrowAlreadyBorrowedMessage').hide();
+    });
+}
+
+
+
+<div id="waitlistModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="waitlistModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="waitlistModalLabel">Join Waitlist</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Do you want to join the waitlist for this book?</p>
+                <p id="waitlistSuccessMessage" style="display: none; color: green;">The book has been successfully added to the waitlist!</p>
+                <p id="waitlistAlreadyAddedMessage" style="display: none; color: red;">You have already added this book to the waitlist!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                <button type="button" class="btn btn-primary" id="confirmWaitlistButton">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+function joinWaitlist(isbn13) {
+    $('#waitlistModal').modal('show');
+
+    $('#confirmWaitlistButton').click(function () {
+        $.ajax({
+            type: "POST",
+            url: "/WaitList/Join",
+            data: { isbn13: isbn13 },
+            success: function (response) {
+                if (response.Success) {
+                    $('#waitlistSuccessMessage').show(); // Afișați mesajul de succes
+                    $('#confirmWaitlistButton').hide(); // Ascundeți butonul "Yes" după ce ați adăugat cu succes în lista de așteptare
+                    location.reload();
+                } else {
+                    $('#waitlistAlreadyAddedMessage').show(); // Afișați mesajul de avertisment că cartea a fost deja adăugată în lista de așteptare
+                }
+            },
+            error: function () {
+                // Tratați cazurile de eroare, dacă este necesar
+            }
+        });
+    });
+
+    $('#waitlistModal').on('hidden.bs.modal', function () {
+        $('#confirmWaitlistButton').off('click');
+        $('#waitlistSuccessMessage').hide(); // Ascundeți mesajele la închiderea modalului
+        $('#waitlistAlreadyAddedMessage').hide();
+    });
+}

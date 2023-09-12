@@ -1,0 +1,210 @@
+using System;
+using System.Linq;
+using System.Web.Mvc;
+using MyLibrary.Models;
+using System.Data.Entity;
+using System.Net;
+using MyLibrary.ADClasses;
+
+namespace MyLibrary.Controllers
+{
+    public class BorrowBookController : Controller
+    {
+        private I_CoposEntities db = new I_CoposEntities(); 
+        UserInfo user = new UserInfo();
+
+        public ActionResult MyBorrowedBooks()
+        {
+            return View(db.Barrows.OrderBy(p => p.BorrowedBookId).Distinct().ToList());
+        }
+
+        
+        // This action handles the return of a borrowed book
+        [HttpPost]
+        public ActionResult ReturnBook(int BorrowedBookId)
+        {
+            try
+            {
+                // Find the borrowed book by its unique ID
+                var borrowedBook = db.Barrows.Find(BorrowedBookId);
+
+                // Check if the borrowed book exists and has not been validated for return, and has a return date set
+                if (borrowedBook != null && !borrowedBook.IsValidated && borrowedBook.ReturnDate.HasValue)
+                {
+                    borrowedBook.IsReturned = true;
+                    db.SaveChanges();
+
+                    var bookAvailable = db.BooksAvailables.FirstOrDefault(b => b.Isbn13 == borrowedBook.BookISBN);
+
+                    if (bookAvailable != null)
+                    {
+                        bookAvailable.QtyAvailable++;
+
+                        db.SaveChanges();
+                    }
+
+                    return Json(new { success = true });
+                }
+
+                return Json(new { success = false, message = "The book could not be returned." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+
+
+
+        // This action handles the validation of a book return
+        public ActionResult ValidateReturn(int BorrowedBookId)
+        {
+            // Find the borrowed book by its ID and mark it as validated
+            var borrowedBook = db.Barrows.Find(BorrowedBookId);
+            if (borrowedBook != null)
+            {
+                borrowedBook.IsValidated = true;
+                db.SaveChanges();
+            }
+            return RedirectToAction("MyBorrowedBooks");
+        }
+
+        [HttpGet]
+        // This action displays the borrowing form
+        public ActionResult Borrow()
+        {
+            // Display error or success messages, if any
+            ViewBag.ErrorMessage = TempData["ErrorMessage"];
+            ViewBag.SuccessMessage = TempData["SuccessMessage"];
+            return View();
+        }
+
+        [HttpPost]
+        
+        // This action processes the book borrowing
+        public ActionResult Borrow(string isbn13)
+        {
+            // Find the book by ISBN-13
+            var book = db.BooksAvailables.FirstOrDefault(b => b.Isbn13 == isbn13);
+
+            if (user.isLoggedIn()) // Check if the user is logged in
+            {
+                string currentUserId = getUserName();
+
+                // Verifică dacă utilizatorul a împrumutat deja aceeași carte
+                var existingBorrow = db.Barrows.FirstOrDefault(b =>
+                    b.UserId == currentUserId &&
+                    b.BookISBN == isbn13 &&
+                    (!b.IsReturned.HasValue || !b.IsReturned.Value)); // Convertim IsReturned la bool
+
+                if (existingBorrow != null)
+                {
+                    var response = new
+                    {
+                        Success = false,
+                        Message = "You have already borrowed this book."
+                    };
+                    return Json(response);
+                }
+
+                if (book.QtyAvailable > 0)
+                {
+                    book.QtyAvailable--;
+
+                    Barrow borrowedBook = new Barrow
+                    {
+                        UserId = currentUserId,
+                        BookName = book.BookName,
+                        BookISBN = book.Isbn13,
+                        BorrowDate = DateTime.Now,
+                        ReturnDate = DateTime.Now.AddDays(14)
+                    };
+
+                    db.Barrows.Add(borrowedBook);
+                    db.SaveChanges();
+
+                    var response = new
+                    {
+                        Success = true,
+                        Message = "The book has been borrowed successfully."
+                    };
+                    return Json(response);
+                }
+                else
+                {
+                    var response = new
+                    {
+                        Success = false,
+                        Message = "The book is not available for borrowing."
+                    };
+                    return Json(response);
+                }
+            }
+            else
+            {
+                return RedirectToAction("LoginPage", "Account");
+            }
+        }
+
+
+
+
+
+
+        //public ActionResult Borrow(string isbn13)
+        //{
+        //    // Find the book by ISBN-13
+        //    var book = db.BooksAvailables.FirstOrDefault(b => b.Isbn13 == isbn13);
+
+        //    if (user.isLoggedIn()) // Check if the user is logged in
+        //    {
+        //        string currentUserId = getUserName();
+
+        //        if (book.QtyAvailable > 0) 
+        //        {
+        //            book.QtyAvailable--; 
+
+        //            Barrow borrowedBook = new Barrow
+        //            {
+        //                UserId = currentUserId,
+        //                BookName = book.BookName,
+        //                BookISBN = book.Isbn13,
+        //                BorrowDate = DateTime.Now,
+        //                ReturnDate = DateTime.Now.AddDays(14) 
+        //            };
+
+        //            db.Barrows.Add(borrowedBook); 
+        //            db.SaveChanges(); 
+
+        //            var response = new
+        //            {
+        //                Success = true,
+        //                Message = "The book has been borrowed successfully"
+        //            };
+        //            return Json(response);
+        //        }
+        //        else
+        //        {
+        //            var response = new
+        //            {
+        //                Success = false,
+        //                Message = "Error"
+        //            };
+        //            return Json(response);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        return RedirectToAction("LoginPage", "Account");
+        //    }
+
+        //}
+
+        public string getUserName()
+        {
+            UserInfo user = new UserInfo();
+            return user.getUsername();
+        }
+    }
+}

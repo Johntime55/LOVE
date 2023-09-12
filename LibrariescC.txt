@@ -1,0 +1,334 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Entity;
+using System.Linq;
+using System.Net;
+using System.Web;
+using System.Web.Mvc;
+using MyLibrary.Models;
+
+
+namespace MyLibrary.Controllers
+{
+    public class LibrariesController : Controller
+    {
+        private I_CoposEntities db = new I_CoposEntities();
+
+        // GET: Libraries
+        public ActionResult Index()
+        {
+            return View(db.Libraries.OrderBy(p => p.Author).Distinct().ToList());
+        }
+
+       
+
+        // GET: Libraries/Create
+        public ActionResult Create()
+        {
+            return View();
+        }
+
+        // POST: Libraries/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
+        // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Create([Bind(Include = "id,BookName,Author,Isbn13,Isbn10,Publisher,YearPublished,CoverImage,QtyAvailable")] Library library)
+        {
+            if (ModelState.IsValid)
+            {
+                db.Libraries.Add(library);
+                db.SaveChanges();
+                var bookAvailable=db.BooksAvailables.FirstOrDefault(b => b.BookName == library.BookName);
+                if (bookAvailable != null)
+                {
+                    bookAvailable.QtyAvailable = library.QtyAvailable;
+                }
+                else
+                {
+                    db.BooksAvailables.Add(new BooksAvailable
+                    {
+                        BookName = library.BookName,
+                        QtyAvailable = library.QtyAvailable,
+                    });
+                }
+                db.SaveChanges();
+                return RedirectToAction("Index");
+            }
+
+            return View(library);
+        }
+
+        // GET: Libraries/Edit/5
+        public ActionResult Edit(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            Library library = db.Libraries.Find(id);
+            if (library == null)
+            {
+                return HttpNotFound();
+            }
+            return View(library);
+        }
+
+        // POST: Libraries/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
+        // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Edit([Bind(Include = "id,BookName,Author,Isbn13,Isbn10,Publisher,YearPublished,CoverImage,QtyAvailable")] Library library)
+        {
+            if (ModelState.IsValid)
+            {
+                db.Entry(library).State = EntityState.Modified;
+                db.SaveChanges();
+                //Actualizm detaliile in tabela BooksAvailables
+                var bookAvailable = db.BooksAvailables.FirstOrDefault(b => b.BookName == library.BookName);
+                if (bookAvailable != null)
+                {
+                    bookAvailable.QtyAvailable =library.QtyAvailable;
+                    db.SaveChanges();
+                }
+
+                return RedirectToAction("Index");
+            }
+            return View(library);
+        }
+
+
+
+        // GET: Libraries/Delete/5
+        public ActionResult Delete(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            Library library = db.Libraries.Find(id);
+            if (library == null)
+            {
+                return HttpNotFound();
+            }
+            return View(library);
+        }
+
+
+        // POST: Libraries/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public ActionResult DeleteConfirmed(int id)
+        {
+            //We check if the book is borrowed in Borrow
+            bool isBookBorrowed = db.Barrows.Any(b => b.BorrowedBookId == id);
+            //Check if the book is in the waiting list
+            bool isBookInWaitlist = db.Waitlists.Any(w => w.WaitlistId == id);
+
+            if (isBookBorrowed)
+            {
+                TempData["ErrorMessage"] = "The book is borrowed, you cannot delete it!!!!!!";
+            }
+            else if (isBookInWaitlist)
+            {
+                TempData["ErrorMessage"] = "The book is in the waiting list, you cannot delete it!!!!!!!!!!";
+            }
+            else
+            {
+                // If it's in neither state, we delete the book from both tables and set a success message
+                Library library = db.Libraries.Find(id);
+                if (library == null)
+                {
+                    return HttpNotFound();
+                }
+
+                // Delete the book from the Libraries table
+                db.Libraries.Remove(library);
+
+                // Look for the book in the BooksAvailables table and delete it if it exists
+                BooksAvailable bookAvailable = db.BooksAvailables.FirstOrDefault(ba => ba.id == id);
+                if (bookAvailable != null)
+                {
+                    db.BooksAvailables.Remove(bookAvailable);
+                }
+
+                db.SaveChanges();
+
+                TempData["SuccessMessage"] = "Cartea a fost ștearsă cu succes.";
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        //public void ActualizeazaCantitateDisponibila(int libraryId)
+        //{
+        //    // Obține cartea din tabela principală cu ID-ul specificat
+        //    Library library = db.Libraries.Find(libraryId);
+
+            //    if (library != null)
+            //    {
+            //        // Obține cantitatea inițială disponibilă din tabela BooksAvailables
+            //        int initialAvailableBooksCount = (int)db.BooksAvailables
+            //            .Where(ba => ba.BookName == library.BookName)
+            //            .Sum(ba => ba.QtyAvailable);
+
+            //        // Obține numărul de cărți împrumutate din tabela Barrow
+            //        int borrowedBooksCount = db.Barrows
+            //            .Count(b => b.BorrowedBookId == libraryId);
+
+            //        // Calculează noua cantitate disponibilă
+            //        int newAvailableBooksCount = initialAvailableBooksCount - borrowedBooksCount;
+
+            //        // Actualizează cantitatea disponibilă în tabela BooksAvailables
+            //        var booksAvailable = db.BooksAvailables
+            //            .FirstOrDefault(ba => ba.BookName == library.BookName);
+
+            //        if (booksAvailable != null)
+            //        {
+            //            booksAvailable.QtyAvailable = newAvailableBooksCount;
+            //            db.SaveChanges();
+            //        }
+
+            //        // Actualizează cantitatea disponibilă în tabela principală Library
+            //        library.QtyAvailable = newAvailableBooksCount;
+            //        db.SaveChanges();
+            //    }
+            //}
+
+            //public void UpdateAvailableBooksCount()
+            //{
+            //    //Calculam cantitatea totala de carti imprumutate din tabela Barrows
+            //    int boorowedBooksCount = db.Barrows.Count();
+
+            //    //Obtinem cantitatea initiala de carti disponibile din tabelul BooksAvailables
+            //    int initialAvailableBooksCount = db.BooksAvailables.Sum(ba = ba.QtyAvailable);
+
+            //    //Calculam cantitatea actuala de carti disponibile
+            //    int currentAvailablesBooksCount= initialAvailableBooksCount - boorowedBooksCount;
+
+            //    //Actualizeaza cantitatea de carti disponible in tabela BooksAvailables
+            //    var booksAvailables = db.BooksAvailables.FirstOrDefault();//O singura inregistrare in BooksAvailables
+
+            //    if(booksAvailables != null)
+            //    {
+            //        booksAvailables.QtyAvailable = currentAvailablesBooksCount;
+            //        db.SaveChanges();
+
+            //    }
+
+
+            //}
+
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+    }
+}
+
+
+
+
+
+@using MyLibrary.ADClasses
+@{ var usrData = new UserInfo();}
+
+@model IEnumerable<MyLibrary.Models.Library>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+
+@if (!string.IsNullOrEmpty(TempData["ErrorMessage"] as string))
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+@if (!string.IsNullOrEmpty(TempData["SuccessMessage"] as string))
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (usrData.checkIfUserIsAdmin())
+{
+    <h2>All Books</h2>
+
+
+    <table class="table table-bordered table-sm shadow">
+        <tr class="">
+            <th>
+                @Html.DisplayNameFor(model => model.BookName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Author)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Isbn13)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Isbn10)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Publisher)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.YearPublished)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CoverImage)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.QtyAvailable)
+            </th>
+            <th></th>
+        </tr>
+
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.BookName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Author)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Isbn13)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Isbn10)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Publisher)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.YearPublished)
+                </td>
+                <td>
+                    @*@Html.DisplayFor(modelItem => item.CoverImage)*@
+
+                    <img src="@item.CoverImage" class="img-thumbnail" alt="" width="50" height="150" />
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.QtyAvailable)
+                </td>
+                <td>
+                    @Html.ActionLink("Edit", "Edit", new { id = item.id }, new { @class = "btn btn-danger btn-sm" })
+                    @Html.ActionLink("Create", "Create",null, new { @class = "btn btn-warning btn-sm" })
+                    @Html.ActionLink("Delete", "Delete", new { id = item.id }, new { @class = "btn btn-primary btn-sm" })
+                </td>
+            </tr>
+        }
+
+    </table>
+
+}
+

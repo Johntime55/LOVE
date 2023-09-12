@@ -1,0 +1,215 @@
+<div class="modal fade" id="returnBookModal" tabindex="-1" role="dialog" aria-labelledby="returnBookModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="returnBookModalLabel">Confirmation Return Book</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to return this book?
+                <div id="returnSuccessMessage" class="alert alert-success" style="display: none;">
+                    The book has been returned successfully.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                <button type="button" class="btn btn-primary" id="confirmReturn">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+$(document).ready(function () {
+    // Gestionarea evenimentului de clic pe butonul "Return book"
+    $('.return-book-btn').click(function () {
+        var borrowedBookId = $(this).data('borrowed-book-id');
+
+        // Deschide modalul de confirmare pentru returnarea cărții
+        $('#returnBookModal').modal('show');
+
+        // Gestionarea evenimentului de clic pe butonul "Yes" din modal
+        $('#confirmReturn').click(function () {
+            $.ajax({
+                type: "POST",
+                url: "/BorrowBook/ReturnBook",
+                data: { BorrowedBookId: borrowedBookId },
+                success: function (response) {
+                    if (response.success) {
+                        // Ascundeți modalul de confirmare
+                        $('#returnBookModal').modal('hide');
+
+                        // Afișați mesajul de succes în interiorul modalului
+                        $('#returnSuccessMessage').show();
+                        
+                        // Înlocuiți butonul "Return book" cu textul "Returned"
+                        $('.return-book-btn[data-borrowed-book-id="' + borrowedBookId + '"]').replaceWith('<text>Returned</text>');
+                    } else {
+                        // Tratarea erorilor sau afișarea unui mesaj de eroare
+                    }
+                },
+                error: function () {
+                    // Tratarea erorilor de comunicare cu serverul
+                }
+            });
+        });
+    });
+
+    // Gestionarea evenimentului de închidere a modalului
+    $('#returnBookModal').on('hidden.bs.modal', function () {
+        // Dezactivați gestionarea evenimentului de clic pentru butonul "Yes"
+        $('#confirmReturn').off('click');
+    });
+});
+
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>UserName</th>
+            <th>BookName</th>
+            <th>ISBN</th>
+            <th>BorrowDate</th>
+            <th>ReturnDate</th>
+            <th>Actions</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var book in Model)
+        {
+            <tr>
+                <td>@book.BorrowedBookId</td>
+                <td>@book.UserId</td>
+                <td>@book.BookName</td>
+                <td>@book.BookISBN</td>
+                <td>@book.BorrowDate</td>
+                <td>@book.ReturnDate</td>
+                <td>
+                    @if (book.IsReturned == true)
+                    {
+                        <text>Returned</text>
+                    }
+                    else
+                    {
+                        <a href="#" data-toggle="modal" data-target="#returnBookModal" class="btn btn-danger return-book-btn" data-borrowed-book-id="@book.BorrowedBookId">Return book</a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+// This action handles the return of a borrowed book
+[HttpPost]
+public ActionResult ReturnBook(int BorrowedBookId)
+{
+    try
+    {
+        // Find the borrowed book by its unique ID
+        var borrowedBook = db.Barrows.Find(BorrowedBookId);
+
+        // Check if the borrowed book exists and has not been validated for return, and has a return date set
+        if (borrowedBook != null && !borrowedBook.IsValidated && borrowedBook.ReturnDate.HasValue)
+        {
+            borrowedBook.IsReturned = true;
+            db.SaveChanges();
+
+            var bookAvailable = db.BooksAvailables.FirstOrDefault(b => b.Isbn13 == borrowedBook.BookISBN);
+
+            if (bookAvailable != null)
+            {
+                bookAvailable.QtyAvailable++;
+
+                db.SaveChanges();
+            }
+
+            return Json(new { success = true, message = "The book has been returned successfully." });
+        }
+
+        return Json(new { success = false, message = "The book could not be returned." });
+    }
+    catch (Exception ex)
+    {
+        return Json(new { success = false, message = ex.Message });
+    }
+}
+
+
+
+
+
+
+cazul 2
+
+<div class="modal fade" id="returnBookModal" tabindex="-1" role="dialog" aria-labelledby="returnBookModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="returnBookModalLabel">Confirmation Return Book</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to return this book?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                <button type="button" class="btn btn-primary" id="confirmReturn">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+$(document).ready(function () {
+    // Gestionarea evenimentului de clic pe butonul "Return book"
+    $('.return-book-btn').click(function () {
+        var borrowedBookId = $(this).data('borrowed-book-id');
+
+        // Deschide modalul de confirmare pentru returnarea cărții
+        $('#returnBookModal').modal('show');
+
+        // Gestionarea evenimentului de clic pe butonul "Yes" din modal
+        $('#confirmReturn').click(function () {
+            $.ajax({
+                type: "POST",
+                url: "/BorrowBook/ReturnBook",
+                data: { BorrowedBookId: borrowedBookId },
+                success: function (response) {
+                    if (response.success) {
+                        // Ascundeți modalul de confirmare și afișați un mesaj de succes
+                        $('#returnBookModal').modal('hide');
+                        $('#returnSuccessMessage').show();
+                        
+                        // Înlocuiți butonul "Return book" cu textul "Returned"
+                        $('.return-book-btn[data-borrowed-book-id="' + borrowedBookId + '"]').replaceWith('<text>Returned</text>');
+                    } else {
+                        // Tratarea erorilor sau afișarea unui mesaj de eroare
+                    }
+                },
+                error: function () {
+                    // Tratarea erorilor de comunicare cu serverul
+                }
+            });
+        });
+    });
+
+    // Gestionarea evenimentului de închidere a modalului
+    $('#returnBookModal').on('hidden.bs.modal', function () {
+        // Dezactivați gestionarea evenimentului de clic pentru butonul "Yes"
+        $('#confirmReturn').off('click');
+    });
+});
+
+
+<div id="returnSuccessMessage" class="alert alert-success" style="display: none;">
+    The book has been returned successfully.
+</div>

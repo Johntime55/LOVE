@@ -1,0 +1,516 @@
+@using MyLibrary.ADClasses
+@{ var usrData = new UserInfo(); }
+
+@model IEnumerable<MyLibrary.Models.BooksAvailable>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Books Availables</h2>
+
+@*<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>*@
+
+
+<table class="table table-bordered table-sm shadow">
+    <tr class="">
+        <th>
+            @Html.DisplayNameFor(model => model.BookName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Author)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Isbn13)
+        </th>
+        @if (usrData.checkIfUserIsAdmin())
+        {
+            <th>
+                @Html.DisplayNameFor(model => model.Isbn10)
+            </th>
+        }
+        <th>
+            @Html.DisplayNameFor(model => model.Publisher)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.YearPublished)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CoverImage)
+        </th>
+        @if (usrData.checkIfUserIsAdmin())
+        {
+            <th>
+                @Html.DisplayNameFor(model => model.QtyAvailable)
+            </th>
+        }
+        <th>Action</th>
+    </tr>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.BookName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Author)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Isbn13)
+            </td>
+            @if (usrData.checkIfUserIsAdmin())
+            {
+                <td>
+                    @Html.DisplayFor(modelItem => item.Isbn10)
+                </td>
+            }
+            <td>
+                @Html.DisplayFor(modelItem => item.Publisher)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.YearPublished)
+            </td>
+            <td>
+                <img src="@item.CoverImage" class="img-thumbnail" alt="" width="50" height="150" />
+            </td>
+            @if (usrData.checkIfUserIsAdmin())
+            {
+                <td>
+                    {@Html.DisplayFor(modelItem => item.QtyAvailable)}
+                </td>
+            }
+        <td>
+            @*<button type="button" class="btn btn-primary" onclick="showBookDetails(@item.id)">Details</button>*@
+            <button class="btn btn-primary btn-sm d-inline mx-2" onclick="showBookDetails(@item.id)">Details</button>
+            @if (item.QtyAvailable > 0)
+            {
+                @*<button class="btn btn-primary btn-sm" onclick="borrowBook('@item.Isbn13')">Borrow</button>*@
+                <button class="btn btn-primary btn-sm d-inline mx-2" onclick="borrowBook('@item.Isbn13')">Borrow</button>
+            }
+            else
+            {
+                @*<button class="btn btn-warning btn-sm " onclick="joinWaitlist('@item.Isbn13')">Waitlist</button>*@
+                <button class="btn btn-warning btn-sm d-inline mx-2" onclick="joinWaitlist('@item.Isbn13')">Waitlist</button>
+            }
+        </td>
+        </tr>
+    }
+</table>
+
+
+
+<!-- Modal pentru afișarea detaliilor cărții -->
+@*<div class="modal fade" id="bookDetailsModal" tabindex="-1" role="dialog" aria-labelledby="bookDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bookDetailsModalLabel">Detalii Carte</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="bookDetailsContent">
+                </div>
+            </div>
+        </div>
+    </div>*@
+
+
+<!-- Modal pentru afișarea detaliilor cărții -->
+<div class="modal fade" id="bookDetailsModal" tabindex="-1" role="dialog" aria-labelledby="bookDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bookDetailsModalLabel">Detalii Carte</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="bookDetailsContent">
+                <!-- Aici vor fi afișate detaliile cărții utilizând JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <!-- Butonul "Închide" pentru a închide fereastra modală -->
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Închide</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<!-- Modal pentru Waitlist -->
+<div id="waitlistModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="waitlistModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="waitlistModalLabel">Join Waitlist</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Do you want to join the waitlist for this book?</p>
+                <p id="waitlistSuccessMessage" style="display: none; color: green;">The book has been successfully added to the waitlist!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                <button type="button" class="btn btn-primary" id="confirmWaitlistButton">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<!--<div id="waitlistModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="waitlistModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="waitlistModalLabel">Join Waitlist</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Do you want to join the waitlist for this book?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                <button type="button" class="btn btn-primary" id="confirmWaitlistButton">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>-->
+<!-- Modal pentru Borrow -->
+<div class="modal fade" id="borrowModal" tabindex="-1" role="dialog" aria-labelledby="borrowModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="borrowModalLabel">Borrow Confirmation</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to borrow this book?
+                <p id="borrowSuccessMessage" style="display: none; color: green;">The book has been successfully borrowed!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                <button type="button" class="btn btn-primary" id="confirmBorrowButton">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+
+    //Details
+
+    function showBookDetails(bookId) {
+        $.ajax({
+            type: "GET",
+            url: "/BooksAvailable/Details/" + bookId,
+            success: function (data) {
+                var modalContent = `
+                <h5>Titlu: ${data.Title}</h5>
+                <p>Autor: ${data.Author}</p>
+                <p>ISBN-13: ${data.Isbn13}</p>
+                <p>ISBN-10: ${data.Isbn10}</p>
+                <p>Editor: ${data.Publisher}</p>
+                <p>Anul Publicării: ${data.YearPublished}</p>
+                <img src="${data.CoverImage}" alt="Imagine Carte" class="img-thumbnail" width="150" height="200">
+            `;
+
+                $("#bookDetailsContent").html(modalContent);
+
+                // Deschide fereastra modală
+                $("#bookDetailsModal").modal("show");
+            },
+            error: function () {
+                alert("A apărut o eroare la încărcarea detaliilor cărții.");
+            }
+        });
+    }
+
+
+    //function showBookDetails(id) {
+    //    $("#bookDetailsContent").html("<p>Se încarcă...</p>");
+    //    $.ajax({
+    //        type: "GET",
+    //        url: "/BooksAvailable/BookDetails/" + id,
+    //        success: function (response) {
+    //            if (response.Success) {
+    //                var detailsHtml = "<p><strong>Nume carte:</strong> " + response.BookName + "</p>" +
+    //                    "<p><strong>Autor:</strong> " + response.Author + "</p>" +
+    //                    "<p><strong>ISBN-10:</strong> " + response.Isbn10 + "</p>";
+    //                "<p><strong>Publisher:</strong> " + response.Publisher + "</p>";
+    //                "<p><strong>YearPublished:</strong> " + response.YearPublished + "</p>";
+
+    //                $("#bookDetailsContent").html(detailsHtml);
+    //            } else {
+    //                $("#bookDetailsContent").html("<p>Eroare: " + response.Message + "</p>");
+    //            }
+    //        },
+    //        error: function () {
+    //            $("#bookDetailsContent").html("<p>Eroare la încărcarea detaliilor cărții.</p>");
+    //        }
+    //    });
+    //    $("#bookDetailsModal").modal("show");
+    //}
+
+
+    //Borrow
+    function borrowBook(isbn13) {
+        $('#borrowModal').modal('show');
+
+        $('#confirmBorrowButton').click(function () {
+            $.ajax({
+                type: "POST",
+                url: "/BorrowBook/Borrow",
+                data: { isbn13: isbn13 },
+                success: function (response) {
+                    if (response.Success) {
+                        $('#borrowModal').modal('hide');
+                        $('#borrowSuccessMessage').show();
+                        location.reload();
+                    } else {
+                    }
+                },
+                error: function () {
+                }
+            });
+        });
+
+        $('#borrowModal').on('hidden.bs.modal', function () {
+            $('#confirmBorrowButton').off('click');
+            $('#borrowSuccessMessage').hide();
+        });
+    }
+
+
+
+
+    //function borrowBook(isbn13) {
+    //    $('#borrowModal').modal('show');
+
+    //    $('#confirmBorrowButton').click(function () {
+
+    //        $.ajax({
+    //            type: "POST",
+    //            url: "/BorrowBook/Borrow",
+    //            data: { isbn13: isbn13 },
+    //            success: function (response) {
+    //                if (response.Success) {
+    //                    $('#borrowModal').modal('hide');
+    //                    location.reload();
+    //                } else {
+
+    //                }
+    //            },
+    //            error: function () {
+
+    //            }
+    //        });
+    //    });
+
+    //    $('#borrowModal').on('hidden.bs.modal', function () {
+    //        $('#confirmBorrowButton').off('click');
+    //    });
+    //}
+
+
+    //Waitlist
+
+    function joinWaitlist(isbn13) {
+        $('#waitlistModal').modal('show');
+
+        $('#confirmWaitlistButton').click(function () {
+            $.ajax({
+                type: "POST",
+                url: "/Waitlist/Join",
+                data: { isbn13: isbn13 },
+                success: function (response) {
+                    if (response.Success) {
+                        $('#waitlistModal').modal('hide');
+                        $('#waitlistSuccessMessage').show(); 
+                        location.reload();
+                    } else {
+                    }
+                },
+                error: function () {
+                }
+            });
+        });
+
+        $('#waitlistModal').on('hidden.bs.modal', function () {
+            $('#confirmWaitlistButton').off('click');
+            $('#waitlistSuccessMessage').hide(); 
+        });
+    }
+
+
+
+
+
+    //function joinWaitlist(isbn13) {
+    //    $('#waitlistModal').modal('show');
+
+
+    //    $('#confirmWaitlistButton').click(function () {
+    //        $.ajax({
+    //            type: "POST",
+    //            url: "/Waitlist/Join",
+    //            data: { isbn13: isbn13 },
+    //            success: function (response) {
+    //                if (response.Success) {
+    //                    $('#waitlistModal').modal('hide');
+    //                    location.reload();
+    //                } else {
+    //                }
+    //            },
+    //            error: function () {
+    //            }
+    //        });
+    //    });
+
+    //    $('#waitlistModal').on('hidden.bs.modal', function () {
+    //        $('#confirmWaitlistButton').off('click');
+    //    });
+    //}
+</script>
+
+
+
+
+
+
+using MyLibrary.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity;
+using System.Linq;
+using System.Net;
+using System.Web;
+using System.Web.Mvc;
+
+namespace MyLibrary.Controllers
+{
+    public class BooksAvailableController : Controller
+    {
+        private I_CoposEntities db = new I_CoposEntities();
+
+        // GET: BooksAvailable
+        public ActionResult Index()
+        {
+            return View(db.BooksAvailables.OrderBy(p => p.Author).Distinct().ToList());
+        }
+
+        // GET: BooksAvailable/Details/5
+        public ActionResult Details(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+
+            BooksAvailable book = db.BooksAvailables.Find(id);
+
+            if (book == null)
+            {
+                return HttpNotFound();
+            }
+
+            var bookDetails = new
+            {
+                Title = book.BookName,
+                Author = book.Author,
+                Isbn13 = book.Isbn13,
+                Isbn10 = book.Isbn10,
+                Publisher = book.Publisher,
+                YearPublished = book.YearPublished,
+                CoverImage = book.CoverImage 
+            };
+
+            return Json(bookDetails, JsonRequestBehavior.AllowGet);
+        }
+
+
+
+        //public ActionResult BookDetails(int ?id)
+        //{
+        //    var book = db.BooksAvailables.Find(id);
+
+        //    if (book == null)
+        //    {
+        //        return Json(new { Success = false, Message = "Cartea nu a fost găsită." }, JsonRequestBehavior.AllowGet);
+        //    }
+
+        //    return Json(new
+        //    {
+        //        Success = true,
+        //        BookName = book.BookName,
+        //        Author = book.Author,
+        //        Isbn10 = book.Isbn10,
+        //        Publisher = book.Publisher,
+        //        YearPublished = book.YearPublished
+
+        //    }, JsonRequestBehavior.AllowGet);
+        //}
+
+        public ActionResult BorrowAction(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+
+            var book = db.BooksAvailables.Find(id);
+            if (book == null || book.QtyAvailable <= 0)
+            {
+                return HttpNotFound();
+            }
+
+          
+
+            return RedirectToAction("Index");
+        }
+
+        
+
+
+        public ActionResult WaitlistAction(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+
+            var book = db.BooksAvailables.Find(id);
+            if (book == null || book.QtyAvailable > 0)
+            {
+                return HttpNotFound();
+            }
+
+
+            return RedirectToAction("Index");
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+    }
+}

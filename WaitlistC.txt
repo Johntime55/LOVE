@@ -1,0 +1,217 @@
+using System;
+using System.Linq;
+using System.Web.Mvc;
+using MyLibrary.Models;
+using System.Data.Entity;
+using System.Net;
+using MyLibrary.ADClasses;
+
+namespace MyLibrary.Controllers
+{
+    public class WaitListController : Controller
+    {
+        private I_CoposEntities db = new I_CoposEntities(); 
+        UserInfo user = new UserInfo(); 
+
+        public ActionResult MyWaitList()
+        {
+            return View(db.Waitlists.OrderBy(p => p.WaitlistId).Distinct().ToList());
+        }
+
+
+        [HttpPost]
+        public ActionResult ReturnBook(int WaitlistId)
+        {
+            try
+            {
+                var waitlistedBook = db.Waitlists.Find(WaitlistId);
+
+                if (waitlistedBook != null && !waitlistedBook.IsValidated && waitlistedBook.ReturnDate.HasValue)
+                {
+                    waitlistedBook.IsReturned = true;
+
+                    db.SaveChanges();
+
+                    var bookAvailable = db.BooksAvailables.FirstOrDefault(b => b.Isbn13 == waitlistedBook.BookISBN);
+
+                    if (bookAvailable != null)
+                    {
+                        bookAvailable.QtyAvailable++;
+                        db.SaveChanges();
+                    }
+
+                    return Json(new { success = true });
+                }
+                return Json(new { success = false, message = "The book could not be returned." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+     
+        public ActionResult Join()
+        {
+            ViewBag.ErrorMessage = TempData["ErrorMessage"];
+            ViewBag.SuccessMessage = TempData["SuccessMessage"];
+
+            return View();
+        }
+
+        //[HttpPost]
+        //// Action for processing the waitlist entry for a book
+        //public ActionResult Join(string isbn13)
+        //{
+        //    if (string.IsNullOrEmpty(isbn13) || isbn13.Length != 13)
+        //    {
+        //        TempData["ErrorMessage"] = "ISBN-13 must be 13 digits long.";
+        //        return RedirectToAction("Join");
+        //    }
+
+        //    var book = db.BooksAvailables.FirstOrDefault(b => b.Isbn13 == isbn13);
+
+        //    if (book == null)
+        //    {
+        //        TempData["ErrorMessage"] = "The book with this ISBN-13 does not exist in the library.";
+        //        return RedirectToAction("Join");
+        //    }
+
+        //    if (user.isLoggedIn())
+        //    {
+        //        string currentUserId = getUserName();
+
+        //        if (book.QtyAvailable >= -500)
+        //        {
+
+        //            book.QtyAvailable--;
+
+        //            Waitlist waitlistedBook = new Waitlist
+        //            {
+        //                UserId = currentUserId,
+        //                BookName = book.BookName,
+        //                BookISBN = book.Isbn13,
+        //                RegistrationDate = DateTime.Now,
+        //                ReturnDate = DateTime.Now.AddDays(1)
+        //            };
+
+        //            db.Waitlists.Add(waitlistedBook);
+        //            db.SaveChanges();
+
+        //            var response = new
+        //            {
+        //                Success = true,
+        //                Message = "The book has been borrowed successfully"
+        //            };
+        //            return Json(response);
+        //        }
+        //        else
+        //        {
+        //            var response = new
+        //            {
+        //                Success = false,
+        //                Message = "Error"
+        //            };
+        //            return Json(response);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        return RedirectToAction("LoginPage", "Account");
+        //    }
+        //}
+
+        [HttpPost]
+        // Action for processing the waitlist entry for a book
+        public ActionResult Join(string isbn13)
+        {
+            if (string.IsNullOrEmpty(isbn13) || isbn13.Length != 13)
+            {
+                TempData["ErrorMessage"] = "ISBN-13 must be 13 digits long.";
+                return RedirectToAction("Join");
+            }
+
+            var book = db.BooksAvailables.FirstOrDefault(b => b.Isbn13 == isbn13);
+
+            if (book == null)
+            {
+                TempData["ErrorMessage"] = "The book with this ISBN-13 does not exist in the library.";
+                return RedirectToAction("Join");
+            }
+
+            if (user.isLoggedIn())
+            {
+                string currentUserId = getUserName();
+
+           
+                var existingWaitlistEntry = db.Waitlists.FirstOrDefault(w =>
+                    w.UserId == currentUserId &&
+                    w.BookISBN == isbn13 &&
+                    (!w.IsReturned.HasValue || !w.IsReturned.Value)); 
+
+                if (existingWaitlistEntry != null)
+                {
+                    TempData["ErrorMessage"] = "You are already in the waitlist for this book.";
+                    return RedirectToAction("Join");
+                }
+
+                if (book.QtyAvailable >= -500)
+                {
+                    book.QtyAvailable--;
+
+                    Waitlist waitlistedBook = new Waitlist
+                    {
+                        UserId = currentUserId,
+                        BookName = book.BookName,
+                        BookISBN = book.Isbn13,
+                        RegistrationDate = DateTime.Now,
+                        ReturnDate = DateTime.Now.AddDays(1)
+                    };
+
+                    db.Waitlists.Add(waitlistedBook);
+                    db.SaveChanges();
+
+                    var response = new
+                    {
+                        Success = true,
+                        Message = "The book has been added to the waitlist successfully."
+                    };
+                    return Json(response);
+                }
+                else
+                {
+                    var response = new
+                    {
+                        Success = false,
+                        Message = "Error"
+                    };
+                    return Json(response);
+                }
+            }
+            else
+            {
+                return RedirectToAction("LoginPage", "Account");
+            }
+        }
+
+
+        public string getUserName()
+        {
+            UserInfo user = new UserInfo();
+            return user.getUsername();
+        }
+
+        // Action for returning a book from the waitlist (duplicate method, needs review)
+        //public ActionResult ReturnBook(int WaitlistId)
+        //{
+        //    var waitlistedBook = db.Barrows.Find(WaitlistId);
+        //    if (waitlistedBook != null)
+        //    {
+        //        waitlistedBook.ReturnDate = DateTime.Now;
+        //        db.SaveChanges();
+        //    }
+        //    return RedirectToAction("MyWaitList");
+        //}
+    }
+}
+
