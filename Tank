@@ -1,0 +1,232 @@
+div class="modal fade" id="borrowModal" tabindex="-1" role="dialog" aria-labelledby="borrowModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="borrowModalLabel">Împrumut Carte</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Cartea a fost împrumutată cu succes!
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Închide</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="borrowErrorModal" tabindex="-1" role="dialog" aria-labelledby="borrowErrorModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="borrowErrorModalLabel">Eroare de Împrumut</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                A apărut o eroare la încercarea de a împrumuta cartea. Vă rugăm să încercați din nou mai târziu.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Închide</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="alreadyBorrowedModal" tabindex="-1" role="dialog" aria-labelledby="alreadyBorrowedModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="alreadyBorrowedModalLabel">Carte Deja Împrumutată</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Ați împrumutat deja această carte.
+            </div>
+div class="modal fade" id="borrowModal" tabindex="-1" role="dialog" aria-labelledby="borrowModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="borrowModalLabel">Împrumut Carte</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Cartea a fost împrumutată cu succes!
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Închide</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="borrowErrorModal" tabindex="-1" role="dialog" aria-labelledby="borrowErrorModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="borrowErrorModalLabel">Eroare de Împrumut</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                A apărut o eroare la încercarea de a împrumuta cartea. Vă rugăm să încercați din nou mai târziu.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Închide</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="alreadyBorrowedModal" tabindex="-1" role="dialog" aria-labelledby="alreadyBorrowedModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="alreadyBorrowedModalLabel">Carte Deja Împrumutată</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Ați împrumutat deja această carte.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Închide</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+function borrowBook(isbn13) {
+    // Verificați dacă cartea este deja împrumutată
+    var isBookAlreadyBorrowed = @Html.Raw(Json.Encode(ViewBag.IsBookAlreadyBorrowed));
+
+    if (isBookAlreadyBorrowed) {
+        // Afișați mesajul că cartea este deja împrumutată în modalul corespunzător
+        $('#alreadyBorrowedModal').modal('show');
+    } else {
+        // Afișați modalul normal pentru împrumut
+        $('#borrowModal').modal('show');
+
+        $('#confirmBorrowButton').click(function () {
+            $.ajax({
+                type: "POST",
+                url: "/BorrowBook/Borrow",
+                data: { isbn13: isbn13 },
+                success: function (response) {
+                    if (response.Success) {
+                        $('#borrowModal').modal('hide');
+                        location.reload();
+                    } else {
+                        // Afișați mesajul de eroare în modalul corespunzător
+                        $('#borrowErrorModal').modal('show');
+                    }
+                },
+                error: function () {
+                    // Afișați mesajul de eroare în modalul corespunzător
+                    $('#borrowErrorModal').modal('show');
+                }
+            });
+        });
+
+        $('#borrowModal').on('hidden.bs.modal', function () {
+            $('#confirmBorrowButton').off('click');
+        });
+    }
+}
+
+[HttpGet]
+// This action displays the borrowing form
+public ActionResult Borrow()
+{
+    // Display error or success messages, if any
+    ViewBag.ErrorMessage = TempData["ErrorMessage"];
+    ViewBag.SuccessMessage = TempData["SuccessMessage"];
+
+    // Get the current user's ID
+    string currentUserId = getUserName();
+
+    // Check if the user has already borrowed this book
+    var existingBorrow = db.Barrows.FirstOrDefault(b =>
+        b.UserId == currentUserId &&
+        b.BookISBN == isbn13 &&
+        (!b.IsReturned.HasValue || !b.IsReturned.Value)); // Convertim IsReturned la bool
+
+    if (existingBorrow != null)
+    {
+        ViewBag.IsBookAlreadyBorrowed = true;
+    }
+    else
+    {
+        ViewBag.IsBookAlreadyBorrowed = false;
+    }
+
+    return View();
+}
+
+
+￼Enter            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Închide</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+function borrowBook(isbn13) {
+    // Verificați dacă cartea este deja împrumutată
+    var isBookAlreadyBorrowed = @Html.Raw(Json.Encode(ViewBag.IsBookAlreadyBorrowed));
+
+    if (isBookAlreadyBorrowed) {
+        // Afișați mesajul că cartea este deja împrumutată în modalul corespunzător
+        $('#alreadyBorrowedModal').modal('show');
+    } else {
+        // Afișați modalul normal pentru împrumut
+        $('#borrowModal').modal('show');
+
+        $('#confirmBorrowButton').click(function () {
+            $.ajax({
+                type: "POST",
+                url: "/BorrowBook/Borrow",
+                data: { isbn13: isbn13 },
+          success: function (response) {
+                    if (response.Success) {
+                        $('#borrowModal').modal('hide');
+                        location.reload();
+                    } else {
+                        // Afișați mesajul de eroare în modalul corespunzător
+                        $('#borrowErrorModal').modal('show');
+                    }
+                },
+                error: function () {
+                    // Afișați mesajul de eroare în modalul corespunzător
+                    $('#borrowErrorModal').modal('show');
+                }
+            });
+        });
+
+        $('#borrowModal').on('hidden.bs.modal', function () {
+            $('#confirmBorrowButton').off('click');
+        });
+    }
+}
+
+[HttpGet]
+// This action displays the borrowing form
+public ActionResult Borrow()
+{
