@@ -1,0 +1,282 @@
+[HttpPost]
+public ActionResult Create([Bind(Include = "BookName, Author, Isbn13, Isbn10, Publisher, YearPublished, CoverImage, QtyAvailable")] Library library)
+{
+    if (ModelState.IsValid)
+    {
+        try
+        {
+            // Aici adaugăm logica pentru a salva cartea în baza de date
+            db.Libraries.Add(library);
+            db.SaveChanges();
+
+            // După ce cartea a fost creată cu succes, putem să actualizăm și tabela BooksAvailables
+            var bookAvailable = db.BooksAvailables.FirstOrDefault(b => b.BookName == library.BookName);
+
+            if (bookAvailable != null)
+            {
+                bookAvailable.QtyAvailable = library.QtyAvailable;
+            }
+            else
+            {
+                db.BooksAvailables.Add(new BooksAvailable
+                {
+                    BookName = library.BookName,
+                    QtyAvailable = library.QtyAvailable,
+                });
+            }
+
+            db.SaveChanges();
+
+            // Returnăm un JSON de succes
+            var response = new
+            {
+                Success = true,
+                Message = "Cartea a fost creată cu succes!"
+            };
+            return Json(response);
+        }
+        catch (Exception ex)
+        {
+            // Dacă apare o excepție, returnăm un JSON de eroare cu mesajul specific
+            var response = new
+            {
+                Success = false,
+                Message = "Eroare la crearea cărții: " + ex.Message
+            };
+            return Json(response);
+        }
+    }
+    else
+    {
+        // Dacă modelul nu este valid, returnăm un JSON de eroare cu mesajele de eroare de validare
+        var response = new
+        {
+            Success = false,
+            Message = "Eroare de validare a datelor",
+            Errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage))
+        };
+        return Json(response);
+    }
+}
+
+
+<button type="button" class="btn btn-success" id="createButton">Create Book</button>
+
+
+<script>
+    $(document).ready(function () {
+        // Afișează modalul de creare când se apasă butonul "Create"
+        $('#createButton').click(function () {
+            $('#createModal').modal('show');
+        });
+
+        // Salvează datele din formularul de creare când se apasă butonul "Save"
+        $('#saveButton').click(function () {
+            // Realizează o cerere AJAX pentru a trimite datele către server
+            $.ajax({
+[HttpPost]
+public ActionResult Create([Bind(Include = "BookName, Author, Isbn13, Isbn10, Publisher, YearPublished, CoverImage, QtyAvailable")] Library library)
+{
+    if (ModelState.IsValid)
+    {
+        try
+        {
+            // Aici adaugăm logica pentru a salva cartea în baza de date
+            db.Libraries.Add(library);
+            db.SaveChanges();
+
+            // După ce cartea a fost creată cu succes, putem să actualizăm și tabela BooksAvailables
+            var bookAvailable = db.BooksAvailables.FirstOrDefault(b => b.BookName == library.BookName);
+
+            if (bookAvailable != null)
+            {
+                bookAvailable.QtyAvailable = library.QtyAvailable;
+            }
+            else
+            {
+                db.BooksAvailables.Add(new BooksAvailable
+                {
+                    BookName = library.BookName,
+                    QtyAvailable = library.QtyAvailable,
+                });
+            }
+
+            db.SaveChanges();
+
+            // Returnăm un JSON de succes
+            var response = new
+            {
+                Success = true,
+                Message = "Cartea a fost creată cu succes!"
+            };
+            return Json(response);
+        }
+        catch (Exception ex)
+        {
+            // Dacă apare o excepție, returnăm un JSON de eroare cu mesajul specific
+            var response = new
+            {
+                Success = false,
+                Message = "Eroare la crearea cărții: " + ex.Message
+            };
+            return Json(response);
+        }
+    }
+    else
+    {
+        // Dacă modelul nu este valid, returnăm un JSON de eroare cu mesajele de eroare de validare
+        var response = new
+        {
+            Success = false,
+            Message = "Eroare de validare a datelor",
+            Errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage))
+        };
+        return Json(response);
+    }
+}
+
+
+<button type="button" class="btn btn-success" id="createButton">Create Book</button>
+
+
+<script>
+    $(document).ready(function () {
+        // Afișează modalul de creare când se apasă butonul "Create"
+        $('#createButton').click(function () {
+            $('#createModal').modal('show');
+        });
+
+        // Salvează datele din formularul de creare când se apasă butonul "Save"
+        $('#saveButton').click(function () {
+            // Realizează o cerere AJAX pentru a trimite datele către server
+            $.ajax({
+                type: 'POST',
+                url: $('#createForm').attr('action'),
+                data: $('#createForm').serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        // Dacă salvarea a fost cu succes, ascunde modalul și reîncarcă pagina
+                        $('#createModal').modal('hide');
+                        location.reload();
+                    } else {
+                        // În caz contrar, afișează mesajul de eroare
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function () {
+                    alert('Error: An error occurred while processing your request.');
+                }
+            });
+        });
+    });
+</script>
+
+<div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="createModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createModalLabel">Create Book</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @using (Html.BeginForm("Create", "Libraries", FormMethod.Post, new { id = "createForm" }))
+                {
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.BookName)
+                        @Html.TextBoxFor(model => model.BookName, new { @class = "form-control", placeholder = "Book Name" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.Author)
+                        @Html.TextBoxFor(model => model.Author, new { @class = "form-control", placeholder = "Author" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.Isbn13)
+                        @Html.TextBoxFor(model => model.Isbn13, new { @class = "form-control", placeholder = "ISBN-13" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.Isbn10)
+                        @Html.TextBoxFor(model => model.Isbn10, new { @class = "form-control", placeholder = "ISBN-10" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.Publisher)
+                        @Html.TextBoxFor(model => model.Publisher, new { @class = "form-control", placeholder = "Publisher" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.YearPublished)
+                        @Html.TextBoxFor(model => model.YearPublished, new { @class = "form-control", placeholder = "Year Published" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.CoverImage)
+                        @Html.TextBoxFor(model => model.CoverImage, new { @class = "form-control", placeholder = "Cover Image URL" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.QtyAvailable)
+                        @Html.TextBoxFor(model => model.QtyAvailable, new { @class = "form-control", placeholder = "Quantity Available" })
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveButton">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+￼Enter                type: 'POST',
+                url: $('#createForm').attr('action'),
+                data: $('#createForm').serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        // Dacă salvarea a fost cu succes, ascunde modalul și reîncarcă pagina
+                        $('#createModal').modal('hide');
+                        location.reload();
+                    } else {
+                        // În caz contrar, afișează mesajul de eroare
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function () {
+                    alert('Error: An error occurred while processing your request.');
+                }
+            });
+        });
+    });
+</script>
+
+<div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="createModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createModalLabel">Create Book</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @using (Html.BeginForm("Create", "Libraries", FormMethod.Post, new { id = "createForm" }))
+                {
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.BookName)
+                        @Html.TextBoxFor(model => model.BookName, new { @class = "form-control", placeholder = "Book Name" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.Author)
+                        @Html.TextBoxFor(model => model.Author, new { @class = "form-control", placeholder = "Author" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.Isbn13)
+                        @Html.TextBoxFor(model => model.Isbn13, new { @class = "form-control", placeholder = "ISBN-13" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.Isbn10)
+                        @Html.TextBoxFor(model => model.Isbn10, new { @class = "form-control", placeholder = "ISBN-10" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.Publisher)
+                        @Html.TextBoxFor(model => model.Publisher, new { @class = "form-control", placeholder = "Publisher" })
