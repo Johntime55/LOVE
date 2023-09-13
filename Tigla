@@ -1,0 +1,83 @@
+@model List<MyLibrary.Models.Barrow>
+
+@{
+    ViewBag.Title = "My Borrowed Books";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>My Borrowed Books</h2>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+@if (!string.IsNullOrEmpty(TempData["ErrorMessage"] as string))
+{
+    <div class="alert alert-danger"> @TempData["ErrorMessage"]</div>
+}
+
+@if (!string.IsNullOrEmpty(TempData["SuccessMessage"] as string))
+{
+    <div class="alert alert-success"> @TempData["SuccessMessage"]</div>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>UserName</th>
+            <th>BookName</th>
+            <th>ISBN</th>
+            <th>BorrowDate</th>
+            <th>ReturnDate</th>
+            <th>Actions</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var book in Model)
+        {
+            <tr>
+                <td>@book.BorrowedBookId</td>
+                <td>@book.UserId</td>
+                <td>@book.BookName</td>
+                <td>@book.BookISBN</td>
+                <td>@book.BorrowDate</td>
+                <td>@book.ReturnDate</td>
+                <td>
+                    @if (book.IsReturned == true)
+                    {
+                        <text>Returned</text>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#returnModal-@book.BorrowedBookId">Return Book</button>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@foreach (var book in Model)
+{
+    <div class="modal fade" id="returnModal-@book.BorrowedBookId" tabindex="-1" role="dialog" aria-labelledby="returnModalLabel-@book.BorrowedBookId" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="returnModalLabel-@book.BorrowedBookId">Confirmation Return Book</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to return this book?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                    <a href="@Url.Action("ReturnBook", "BorrowBook", new { BorrowedBookId = book.BorrowedBookId })" class="btn btn-primary">Yes</a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+￼Enter
