@@ -1,0 +1,91 @@
+<!-- Button to trigger modal -->
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createBookModal">
+  Create New Book
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="createBookModal" tabindex="-1" role="dialog" aria-labelledby="createBookModalLabel">
+  <!-- ... (Partea de sus a modalului rămâne neschimbată) -->
+  <div class="modal-body">
+    <!-- Form to input book details -->
+    @using (Html.BeginForm("Create", "Libraries", FormMethod.Post))
+    {
+      @Html.AntiForgeryToken()
+      <div class="form-group">
+        @Html.LabelFor(model => model.BookName)
+        @Html.TextBoxFor(model => model.BookName, new { @class = "form-control" })
+      </div>
+      <div class="form-group">
+        @Html.LabelFor(model => model.Author)
+        @Html.TextBoxFor(model => model.Author, new { @class = "form-control" })
+      </div>
+      <div class="form-group">
+        @Html.LabelFor(model => model.Isbn13)
+        @Html.TextBoxFor(model => model.Isbn13, new { @class = "form-control" })
+      </div>
+      <div class="form-group">
+        @Html.LabelFor(model => model.Isbn10)
+        @Html.TextBoxFor(model => model.Isbn10, new { @class = "form-control" })
+      </div>
+      <div class="form-group">
+        @Html.LabelFor(model => model.Publisher)
+        @Html.TextBoxFor(model => model.Publisher, new { @class = "form-control" })
+      </div>
+      <div class="form-group">
+        @Html.LabelFor(model => model.YearPublished)
+        @Html.TextBoxFor(model => model.YearPublished, new { @class = "form-control" })
+      </div>
+      <div class="form-group">
+        @Html.LabelFor(model => model.CoverImage)
+        @Html.TextBoxFor(model => model.CoverImage, new { @class = "form-control" })
+      </div>
+      <div class="form-group">
+        @Html.LabelFor(model => model.QtyAvailable)
+        @Html.TextBoxFor(model => model.QtyAvailable, new { @class = "form-control" })
+      </div>
+      <div class="form-group">
+        <button type="submit" class="btn btn-primary">Create</button>
+      </div>
+    }
+  </div>
+  <!-- Restul modalului rămâne neschimbat -->
+</div>
+
+
+
+
+$(document).ready(function () {
+    $('#createBookForm').on('submit', function (e) {
+        e.preventDefault();
+
+        // Obțineți datele din formular
+        var formData = $(this).serialize();
+
+        $.ajax({
+            type: 'POST',
+            url: '@Url.Action("Create", "Libraries")', // Specificați URL-ul pentru acțiunea "Create"
+            data: formData,
+            success: function (result) {
+                // În funcție de rezultat, puteți face diverse acțiuni, cum ar fi închiderea modalului sau afișarea unui mesaj de succes
+                if (result.success) {
+                    // Închideți modalul
+                    $('#createBookModal').modal('hide');
+
+                    // Afișați un mesaj de succes
+                    alert('Cartea a fost creată cu succes.');
+
+                    // Încărcați din nou pagina sau faceți alte acțiuni necesare
+                    location.reload();
+                } else {
+                    // Afișați un mesaj de eroare în caz de eșec
+                    alert('A apărut o eroare la crearea cărții.');
+                }
+            },
+            error: function () {
+                // Afișați un mesaj de eroare în caz de eșec
+                alert('A apărut o eroare la crearea cărții.');
+            }
+        });
+    });
+});
+￼Enter
