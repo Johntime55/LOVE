@@ -1,0 +1,43 @@
+@if (usrData.isLoggedIn())
+{
+    <div class="text-light d-flex align-items-center">
+        <span class="mr-2">
+            Welcome, @usrData.getUsername()!
+        </span>
+        @if (usrData.checkIfUserIsAdmin())
+        {
+            <a class="nav-link text-danger" href="@Url.Action("SwitchRole", "Account")">Switch to User</a>
+        }
+        else
+        {
+            <a class="nav-link text-primary" href="@Url.Action("SwitchRole", "Account")">Switch to Admin</a>
+        }
+        <a class="nav-link text-danger" href="@Url.Action("SignOut", "Account")">Sign Out</a>
+    </div>
+}
+
+
+
+
+public ActionResult SwitchRole()
+{
+    if (User.IsInRole("Admin"))
+    {
+        // Eliminați rolul "Admin" din utilizator
+        Roles.RemoveUserFromRole(User.Identity.Name, "Admin");
+
+        // Adăugați rolul "User" utilizatorului
+        Roles.AddUserToRole(User.Identity.Name, "User");
+    }
+    else
+    {
+        // Eliminați rolul "User" din utilizator
+        Roles.RemoveUserFromRole(User.Identity.Name, "User");
+
+        // Adăugați rolul "Admin" utilizatorului
+        Roles.AddUserToRole(User.Identity.Name, "Admin");
+    }
+
+    // Redirecționați utilizatorul către pagina principală sau către o altă pagină
+    return RedirectToAction("Index", "Home");
+}
