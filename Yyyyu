@@ -1,0 +1,40 @@
+public ActionResult ChangeUserRole(string newRole)
+{
+    if (newRole == "Admin")
+    {
+        userInfo.setUserAsAdmin(true);
+        userInfo.setUserAsManagerST(false);
+        userInfo.setUserAsST(false);
+    }
+    else if (newRole == "User")
+    {
+        userInfo.setUserAsAdmin(false);
+        userInfo.setUserAsManagerST(false);
+        userInfo.setUserAsST(true);
+    }
+
+    return RedirectToAction("SelectPage");
+}
+
+@if (usrData.isLoggedIn())
+{
+    <div class="text-light d-flex align-items-center">
+        <span class="mr-2">
+            Welcome, @usrData.getUsername()!
+        </span>
+        @if (usrData.checkIfUserIsAdmin())
+        {
+            <span class="badge badge-pill badge-danger mr-2">Admin</span>
+            <a href="@Url.Action("ChangeUserRole", "Account", new { newRole = "User" })" class="btn btn-warning btn-sm">Switch to User</a>
+        }
+        else
+        {
+            <span class="badge badge-pill badge-success mr-2">User</span>
+            <a href="@Url.Action("ChangeUserRole", "Account", new { newRole = "Admin" })" class="btn btn-danger btn-sm">Switch to Admin</a>
+        }
+        <a class="nav-link text-danger" href="@Url.Action("SignOut", "Account")">Sign Out</a>
+    </div>
+}
+
+
+￼Enter
