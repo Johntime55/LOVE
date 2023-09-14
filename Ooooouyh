@@ -1,0 +1,258 @@
+@using MyLibrary.ADClasses
+@{
+    var usrData = new UserInfo();
+}
+
+@model IEnumerable<MyLibrary.Models.Library>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<!-- Modal pentru ștergere -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmare ștergere</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Sigur doriți să ștergeți această carte?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Anulare</button>
+                <button type="button" class="btn btn-primary" id="confirmDelete">Șterge</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(TempData["ErrorMessage"] as string))
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+@if (!string.IsNullOrEmpty(TempData["SuccessMessage"] as string))
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (usrData.checkIfUserIsAdmin())
+{
+    <h2>All Books</h2>
+
+    <table class="table table-bordered table-sm shadow">
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.BookName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Author)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Isbn13)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Isbn10)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Publisher)
+            </th>
+            <th>
+@using MyLibrary.ADClasses
+@{
+    var usrData = new UserInfo();
+}
+
+@model IEnumerable<MyLibrary.Models.Library>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<!-- Modal pentru ștergere -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmare ștergere</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Sigur doriți să ștergeți această carte?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Anulare</button>
+                <button type="button" class="btn btn-primary" id="confirmDelete">Șterge</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(TempData["ErrorMessage"] as string))
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+@if (!string.IsNullOrEmpty(TempData["SuccessMessage"] as string))
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (usrData.checkIfUserIsAdmin())
+{
+    <h2>All Books</h2>
+
+    <table class="table table-bordered table-sm shadow">
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.BookName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Author)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Isbn13)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Isbn10)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Publisher)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.YearPublished)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CoverImage)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.QtyAvailable)
+            </th>
+            <th></th>
+        </tr>
+
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.BookName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Author)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Isbn13)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Isbn10)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Publisher)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.YearPublished)
+                </td>
+                <td>
+                    <img src="@item.CoverImage" class="img-thumbnail" alt="" width="50" height="150" />
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.QtyAvailable)
+                </td>
+                <td>
+                    @Html.ActionLink("Edit", "Edit", new { id = item.id }, new { @class = "btn btn-danger btn-sm" })
+                    @Html.ActionLink("Create", "Create", null, new { @class = "btn btn-warning btn-sm" })
+                    <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#deleteModal" data-bookid="@item.id">Delete</button>
+                </td>
+            </tr>
+        }
+    </table>
+}
+
+
+<script>
+    $(document).ready(function () {
+        var bookIdToDelete; // Variabilă pentru a stoca ID-ul cărții care urmează să fie ștearsă
+
+        // Atunci când se face clic pe butonul "Delete" din modal, stocați ID-ul cărții și afișați confirmarea
+        $('#deleteModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            bookIdToDelete = button.data('bookid');
+        });
+
+        // Atunci când se face clic pe butonul "Șterge" din modal, trimiteți cererea AJAX pentru ștergere
+        $('#confirmDelete').click(function () {
+            $.ajax({
+                type: 'POST',
+                url: '/Libraries/Delete/' + bookIdToDelete,
+                success: function (data) {
+                    // Reîncărcați pagina sau efectuați oricare alte acțiuni după ștergerea cărții
+                    location.reload();
+                },
+                error: function (error) {
+                    // Gestionați cazurile de eroare, dacă este necesar
+                    console.error(error);
+                }
+            });
+        });
+    });
+</script>
+
+
+￼Enter                @Html.DisplayNameFor(model => model.YearPublished)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CoverImage)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.QtyAvailable)
+            </th>
+            <th></th>
+        </tr>
+
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.BookName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Author)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Isbn13)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Isbn10)
+                </td>
+          <td>
+                    @Html.DisplayFor(modelItem => item.Publisher)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.YearPublished)
+                </td>
+                <td>
+                    <img src="@item.CoverImage" class="img-thumbnail" alt="" width="50" height="150" />
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.QtyAvailable)
+                </td>
+                <td>
+                    @Html.ActionLink("Edit", "Edit", new { id = item.id }, new { @class = "btn btn-danger btn-sm" })
+                    @Html.ActionLink("Create", "Create", null, new { @class = "btn btn-warning btn-sm" })
+                    <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#deleteModal" data-bookid="@item.id">Delete</button>
+                </td>
+            </tr>
+        }
+    </table>
+}
+
+
+<script>
+    $(document).ready(function () {
+        var bookIdToDelete; // Variabilă pentru a stoca ID-ul cărții care urmează să fie ștearsă
