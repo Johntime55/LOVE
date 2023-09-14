@@ -1,0 +1,47 @@
+<div class="navbar-nav">
+    @if (usrData.isLoggedIn())
+    {
+        <div class="nav-item dropdown">
+            <button class="nav-link dropdown-toggle btn btn-link" type="button" id="roleDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                @if (usrData.checkIfUserIsAdmin())
+                {
+                    <span class="badge badge-pill badge-danger mr-2">Admin</span>
+                }
+                else 
+                {
+                    <span class="badge badge-pill badge-success mr-2">User</span>
+                }
+                @usrData.getUsername()
+            </button>
+            <div class="dropdown-menu" aria-labelledby="roleDropdown">
+                <a class="dropdown-item" href="@Url.Action("SwitchRole", "Account")">Switch to @SwitchToRole</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="@Url.Action("SignOut", "Account")">Sign Out</a>
+            </div>
+        </div>
+    }
+</div>
+
+
+public ActionResult SwitchRole()
+{
+    // Obțineți utilizatorul curent și rolurile sale
+    var user = UserManager.FindByName(User.Identity.Name);
+    var roles = UserManager.GetRoles(user.Id);
+
+    // Verificați dacă utilizatorul are rolul "Admin" sau "User" și comutați-l
+    if (roles.Contains("Admin"))
+    {
+        UserManager.RemoveFromRole(user.Id, "Admin");
+        UserManager.AddToRole(user.Id, "User");
+    }
+    else if (roles.Contains("User"))
+    {
+        UserManager.RemoveFromRole(user.Id, "User");
+        UserManager.AddToRole(user.Id, "Admin");
+    }
+
+    // Redirecționați utilizatorul înapoi la pagina anterioară sau la pagina principală
+    return RedirectToAction("Index", "Home"); // Schimbați ruta după necesitățile dvs.
+}
+￼Enter
