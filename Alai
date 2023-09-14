@@ -1,0 +1,49 @@
+<div class="text-light d-flex align-items-center">
+    <span class="mr-2">
+        Welcome, @usrData.getUsername()!
+    </span>
+    @if (usrData.checkIfUserIsAdmin())
+    {
+        <span class="badge badge-pill badge-danger mr-2">Admin</span>
+    }
+    else 
+    {
+        <span class="badge badge-pill badge-success mr-2">User</span>
+    }
+    <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Actions
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            @if (usrData.checkIfUserIsAdmin())
+            {
+                <a class="dropdown-item" href="@Url.Action("SwitchRole", "Account", new { role = "User" })">Switch to User</a>
+            }
+            else 
+            {
+                <a class="dropdown-item" href="@Url.Action("SwitchRole", "Account", new { role = "Admin" })">Switch to Admin</a>
+            }
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="@Url.Action("SignOut", "Account")">Sign Out</a>
+        </div>
+    </div>
+</div>
+
+
+[HttpPost]
+public ActionResult SwitchRole(string role)
+{
+    if (role == "Admin")
+    {
+        // Adăugați utilizatorul la rolul de admin
+        Roles.AddUserToRole(User.Identity.Name, "Admin");
+    }
+    else if (role == "User")
+    {
+        // Adăugați utilizatorul la rolul de utilizator
+        Roles.AddUserToRole(User.Identity.Name, "User");
+    }
+
+    return RedirectToAction("Index");
+}
+￼Enter
