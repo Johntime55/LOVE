@@ -1,0 +1,46 @@
+!-- Modal pentru confirmare ștergere -->
+<div class="modal fade" id="deleteConfirmationModal" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmationModalLabel">Confirm Delete</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Mesajul de confirmare -->
+                <p>Are you sure you want to delete this book?</p>
+            </div>
+            <div class="modal-footer">
+                <!-- Butonul "No" pentru anulare -->
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                <!-- Butonul "Yes" pentru confirmare -->
+                <button type="button" class="btn btn-danger" id="confirmDeleteButton">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+// Afișează modalul de confirmare la clic pe butonul "Delete"
+$('.delete-button').on('click', function () {
+    var bookId = $(this).data('bookid');
+    $('#deleteConfirmationModal').modal('show');
+    
+    // Atașează ID-ul cărții la butonul "Yes" pentru a ști ce carte să ștergi
+    $('#confirmDeleteButton').data('bookid', bookId);
+});
+
+// La clic pe butonul "Yes", apelează funcția de ștergere
+$('#confirmDeleteButton').on('click', function () {
+    var bookId = $(this).data('bookid');
+    
+    // Aici poți face un apel AJAX către acțiunea "DeleteConfirmed" pentru a efectua ștergerea
+    // Sau poți redirecționa utilizatorul către acea acțiune cu un parametru pentru cartea de șters
+    window.location.href = '/Libraries/DeleteConfirmed/' + bookId;
+});
+
+
+
+￼Enter
