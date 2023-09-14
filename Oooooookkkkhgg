@@ -1,0 +1,41 @@
+@if (User.Identity.IsAuthenticated)
+{
+    <div class="text-light d-flex align-items-center">
+        <span class="mr-2">
+            Welcome, @usrData.getUsername()!
+        </span>
+        @if (User.IsInRole("Admin"))
+        {
+            <a class="nav-link text-danger" href="@Url.Action("SwitchRole", "Account")">Switch to User</a>
+        }
+        else
+        {
+            <a class="nav-link text-primary" href="@Url.Action("SwitchRole", "Account")">Switch to Admin</a>
+        }
+        <a class="nav-link text-danger" href="@Url.Action("SignOut", "Account")">Sign Out</a>
+    </div>
+}
+
+
+public ActionResult SwitchRole()
+{
+    if (User.Identity.IsAuthenticated)
+    {
+        var userManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(new ApplicationDbContext()));
+        var userId = User.Identity.GetUserId();
+
+        if (userManager.IsInRole(userId, "Admin"))
+        {
+            userManager.RemoveFromRole(userId, "Admin");
+            userManager.AddToRole(userId, "User");
+        }
+        else if (userManager.IsInRole(userId, "User"))
+        {
+            userManager.RemoveFromRole(userId, "User");
+            userManager.AddToRole(userId, "Admin");
+        }
+    }
+
+    return RedirectToAction("Index", "Home");
+}
+￼Enter
