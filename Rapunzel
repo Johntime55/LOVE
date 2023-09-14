@@ -1,0 +1,101 @@
+@using MyLibrary.ADClasses
+@{ var usrData = new UserInfo(); }
+
+@model IEnumerable<MyLibrary.Models.Library>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<style>
+    /* Stilizare pentru tabel */
+    .table-container {
+        width: 80%;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .table {
+        width: 100%;
+    }
+
+    .table th, .table td {
+        vertical-align: middle !important;
+        text-align: center;
+    }
+
+    .table thead th {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    /* Stilizare pentru butoane */
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+    }
+
+    .action-buttons a {
+        margin: 5px;
+    }
+</style>
+
+@if (!string.IsNullOrEmpty(TempData["ErrorMessage"] as string))
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+@if (!string.IsNullOrEmpty(TempData["SuccessMessage"] as string))
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (usrData.checkIfUserIsAdmin())
+{
+    <h2 class="text-center mb-4">All Books</h2>
+    
+    <div class="text-center mb-4">
+        @Html.ActionLink("Create New Book", "Create", null, new { @class = "btn btn-warning" })
+    </div>
+
+    <div class="table-container">
+        <table class="table table-bordered table-striped shadow">
+            <tr>
+                <th>@Html.DisplayNameFor(model => model.BookName)</th>
+                <th>@Html.DisplayNameFor(model => model.Author)</th>
+                <th>@Html.DisplayNameFor(model => model.Isbn13)</th>
+                <th>@Html.DisplayNameFor(model => model.Isbn10)</th>
+                <th>@Html.DisplayNameFor(model => model.Publisher)</th>
+                <th>@Html.DisplayNameFor(model => model.YearPublished)</th>
+                <th>@Html.DisplayNameFor(model => model.CoverImage)</th>
+                <th>@Html.DisplayNameFor(model => model.QtyAvailable)</th>
+                <th>Actions</th>
+            </tr>
+
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@Html.DisplayFor(modelItem => item.BookName)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Author)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Isbn13)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Isbn10)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Publisher)</td>
+                    <td>@Html.DisplayFor(modelItem => item.YearPublished)</td>
+                    <td>
+                        <img src="@item.CoverImage" class="img-thumbnail" alt="" width="50" height="150" />
+                    </td>
+                    <td>@Html.DisplayFor(modelItem => item.QtyAvailable)</td>
+                    <td class="action-buttons">
+                        @Html.ActionLink("Edit", "Edit", new { id = item.id }, new { @class = "btn btn-danger btn-sm" })
+                        @Html.ActionLink("Delete", "Delete", new { id = item.id }, new { @class = "btn btn-primary btn-sm" })
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+}
+￼Enter
