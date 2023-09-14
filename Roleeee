@@ -1,0 +1,44 @@
+@if (usrData.isLoggedIn())
+{
+    <div class="text-light d-flex align-items-center">
+        <span class="mr-2">
+            Welcome, @usrData.getUsername()!
+        </span>
+        <a class="nav-link text-danger" href="@Url.Action("SwitchRole", "Account")">Switch to @usrData.getRole()</a>
+        <a class="nav-link text-danger" href="@Url.Action("SignOut", "Account")">Sign Out</a>
+    </div>
+}
+
+
+public ActionResult SwitchRole()
+{
+    if (User.Identity.IsAuthenticated)
+    {
+        var identity = User.Identity as ClaimsIdentity;
+        if (identity != null)
+        {
+            // Obțineți rolul curent al utilizatorului.
+            var userRoleClaim = identity.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role);
+            if (userRoleClaim != null)
+            {
+                string currentRole = userRoleClaim.Value;
+                string newRole = (currentRole == "Admin") ? "User" : "Admin"; // Comutați între roluri.
+
+                // Eliminați rolul curent.
+                identity.RemoveClaim(userRoleClaim);
+
+                // Adăugați noul rol.
+                identity.AddClaim(new Claim(ClaimTypes.Role, newRole));
+
+                // Actualizați identitatea utilizatorului.
+                AuthenticationManager.AuthenticationResponseGrant = new AuthenticationResponseGrant(
+                    new ClaimsPrincipal(identity),
+                    new AuthenticationProperties { IsPersistent = true }
+                );
+            }
+        }
+    }
+
+    return RedirectToAction("Index", "Home");
+}
+￼Enter
