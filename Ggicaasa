@@ -1,0 +1,61 @@
+<td class="action-buttons">
+    <a href="#" data-toggle="modal" data-target="#editModal_@item.id" class="btn btn-success btn-sm">Edit</a>
+    @Html.ActionLink("Delete", "Delete", new { id = item.id }, new { @class = "btn btn-primary btn-sm" })
+</td>
+
+<!-- Modalul pentru Edit -->
+<div class="modal fade" id="editModal_@item.id" tabindex="-1" role="dialog" aria-labelledby="editModalLabel_@item.id" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel_@item.id">Edit Book</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Câmpurile pentru editarea cărții -->
+                <form>
+                    <div class="form-group">
+                        <label for="bookName_@item.id">Book Name</label>
+                        <input type="text" class="form-control" id="bookName_@item.id" value="@item.BookName">
+                    </div>
+                    <div class="form-group">
+                        <label for="author_@item.id">Author</label>
+                        <input type="text" class="form-control" id="author_@item.id" value="@item.Author">
+                    </div>
+                    <div class="form-group">
+                        <label for="isbn13_@item.id">ISBN-13</label>
+                        <input type="text" class="form-control" id="isbn13_@item.id" value="@item.Isbn13">
+                    </div>
+                    <div class="form-group">
+                        <label for="isbn10_@item.id">ISBN-10</label>
+                        <input type="text" class="form-control" id="isbn10_@item.id" value="@item.Isbn10">
+                    </div>
+                    <div class="form-group">
+                        <label for="publisher_@item.id">Publisher</label>
+                        <input type="text" class="form-control" id="publisher_@item.id" value="@item.Publisher">
+                    </div>
+                    <div class="form-group">
+                        <label for="yearPublished_@item.id">Year Published</label>
+                        <input type="text" class="form-control" id="yearPublished_@item.id" value="@item.YearPublished">
+                    </div>
+                    <div class="form-group">
+                        <label for="coverImage_@item.id">Cover Image URL</label>
+                        <input type="text" class="form-control" id="coverImage_@item.id" value="@item.CoverImage">
+                    </div>
+                    <div class="form-group">
+                        <label for="qtyAvailable_@item.id">Quantity Available</label>
+                        <input type="text" class="form-control" id="qtyAvailable_@item.id" value="@item.QtyAvailable">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
