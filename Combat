@@ -1,0 +1,90 @@
+@if (usrData.isLoggedIn())
+{
+    <div class="text-light d-flex align-items-center">
+        <span class="mr-2">
+            Welcome, @usrData.getUsername()!
+        </span>
+        <div class="btn-group">
+            <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Actions
+            </button>
+            <div class="dropdown-menu">
+                <a class="dropdown-item" href="@Url.Action("ChangeRole", "Account", new { newRole = "User" })">User</a>
+                <a class="dropdown-item" href="@Url.Action("ChangeRole", "Account", new { newRole = "Admin" })">Admin</a>
+                <a class="dropdown-item" href="@Url.Action("SignOut", "Account")">Sign Out</a>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+public ActionResult ChangeRole(string newRole)
+{
+    if (User.Identity.IsAuthenticated)
+    {
+        var userManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(new ApplicationDbContext()));
+
+        // Obțineți utilizatorul curent
+        var user = userManager.FindByName(User.Identity.Name);
+
+        // Verificați dacă utilizatorul există
+        if (user != null)
+        {
+            // Ștergeți toate rolurile actuale ale utilizatorului
+            var currentRoles = userManager.GetRoles(user.Id);
+            userManager.RemoveFromRoles(user.Id, currentRoles.ToArray());
+
+            // Adăugați noul rol pentru utilizator
+            userManager.AddToRole(user.Id, newRole);
+
+            // Autentificarea utilizatorului cu noul rol
+            var authenticationManager = HttpContext.GetOwinContext().Authentication;
+            var userIdentity = userManager.CreateIdentity(user, DefaultAuthenticationTypes.ApplicationCookie);
+            authenticationManager.SignIn(new AuthenticationProperties { IsPersistent = false }, userIdentity);
+
+            return RedirectToAction("SelectPage"); // sau o altă acțiune după schimbarea rolului
+        }
+    }
+
+    // În caz contrar, tratați eroarea sau redirecționați la o altă acțiune
+    return RedirectToAction("Error");
+}
+
+@if (usrData.isLoggedIn())
+{
+    <div class="text-light d-flex align-items-center">
+        <span class="mr-2">
+            Welcome, @usrData.getUsername()!
+        </span>
+        <div class="btn-group">
+            <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="actionButton">
+                Actions
+            </button>
+            <div class="dropdown-menu">
+                <a class="dropdown-item" href="javascript:void(0);" id="changeRoleButton">Change Role</a>
+                <a class="dropdown-item" href="@Url.Action("SignOut", "Account")">Sign Out</a>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+
+<script>
+    $(document).ready(function () {
+        $("#changeRoleButton").on("click", function () {
+            // Afișați butonul "Change Role" și "Sign Out" când faceți clic pe "Actions"
+            $(".dropdown-menu").show();
+        });
+
+        // Ascundeți inițial meniul dropdown
+        $(".dropdown-menu").hide();
+    });
+</script>
+
+
+
+
+￼Enter
