@@ -1,0 +1,98 @@
+[HttpPost]
+[ValidateAntiForgeryToken]
+public ActionResult Edit([Bind(Include = "id,BookName,Author,Isbn13,Isbn10,Publisher,YearPublished,CoverImage,QtyAvailable")] Library library)
+{
+    if (ModelState.IsValid)
+    {
+        // Găsește cartea în baza de date după ID
+        var existingBook = db.Libraries.FirstOrDefault(b => b.id == library.id);
+
+        if (existingBook != null)
+        {
+            // Actualizează toate proprietățile cărții existente cu valorile din obiectul 'library' primit în metoda POST
+            existingBook.BookName = library.BookName;
+            existingBook.Author = library.Author;
+            existingBook.Isbn13 = library.Isbn13;
+            existingBook.Isbn10 = library.Isbn10;
+            existingBook.Publisher = library.Publisher;
+            existingBook.YearPublished = library.YearPublished;
+            existingBook.CoverImage = library.CoverImage;
+            existingBook.QtyAvailable = library.QtyAvailable;
+
+            db.Entry(existingBook).State = EntityState.Modified;
+            db.SaveChanges();
+
+            // Actualizăm, de asemenea, detaliile în tabela BooksAvailables
+            var bookAvailable = db.BooksAvailables.FirstOrDefault(b => b.BookName == library.BookName);
+            if (bookAvailable != null)
+            {
+                bookAvailable.QtyAvailable = library.QtyAvailable;
+                db.SaveChanges();
+            }
+
+            return RedirectToAction("Index");
+        }
+    }
+    return View(library);
+}
+
+
+
+
+<td class="action-buttons">
+    <button class="btn btn-primary btn-sm" onclick="openEditModal(@item.id)">Edit</button>
+</td>
+
+
+
+
+<!-- Modal pentru editarea cărții -->
+<div class="modal fade" id="editBookModal" tabindex="-1" role="dialog" aria-labelledby="editBookModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editBookModalLabel">Edit Book</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Formular pentru editare -->
+                <form id="editBookForm" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <!-- Aici adăugați câmpurile pentru editare, cum ar fi BookName, Author, etc. -->
+                    <div class="form-group">
+                        <label for="editBookName">Book Name</label>
+                        <input type="text" class="form-control" id="editBookName" name="BookName" required>
+                    </div>
+                    <!-- Alte câmpuri de editat -->
+
+                    <input type="hidden" id="editBookId" name="id" />
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function openEditModal(bookId) {
+        // Afișăm modalul de editare
+        $('#editBookModal').modal('show');
+
+        // Aici puteți folosi AJAX pentru a obține datele cărții cu ID-ul specificat și pentru a le completa în formularul de editare
+        // După ce completați formularul, puteți trimite datele prin POST către controller pentru a actualiza cartea
+    }
+</script>
+
+
+
+
+
+
