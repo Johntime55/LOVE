@@ -1,0 +1,20 @@
+@if (usrData.isLoggedIn())
+{
+    <div class="text-light d-flex align-items-center">
+        <span class="mr-2">
+            Welcome, @usrData.getUsername()!
+        </span>
+        @if (usrData.checkIfUserIsAdmin())
+        {
+            <span class="badge badge-pill badge-danger mr-2">Admin</span>
+            <a href="@Url.Action("ChangeUserRole", "Account", new { newRole = "User" })" class="btn btn-warning btn-sm">Switch</a>
+        }
+        else
+        {
+            <span class="badge badge-pill badge-success mr-2">User</span>
+            <a href="@Url.Action("ChangeUserRole", "Account", new { newRole = "Admin" })" class="btn btn-danger btn-sm">Switch</a>
+        }
+        <a href="@Url.Action("SignOut", "Account")" class="btn btn-danger btn-sm">Sign Out</a>
+    </div>
+}
+￼Enter
